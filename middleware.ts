@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check if user has completed onboarding
-  if (user && isDashboardPage && !request.nextUrl.pathname.startsWith('/onboarding')) {
+  if (user && isDashboardPage && !request.nextUrl.pathname.startsWith('/onboarding') && !request.nextUrl.pathname.startsWith('/upload')) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('onboarding_completed')
