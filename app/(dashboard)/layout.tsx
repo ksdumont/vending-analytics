@@ -90,7 +90,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
 
-  if (loading) {
+  // Show skeleton while auth is loading, or while redirecting to login
+  if (loading || !user) {
     return <LayoutSkeleton />
   }
 

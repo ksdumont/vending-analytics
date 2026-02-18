@@ -27,15 +27,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
 
-    setProfile(data)
-    return data
+      setProfile(data)
+      return data
+    } catch (err) {
+      console.error('Failed to fetch profile:', err)
+      setProfile(null)
+      return null
+    }
   }, [])
 
   // Onboarding redirect (moved from middleware to avoid server-side DB query)
@@ -50,25 +56,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loading, profile, pathname, router])
 
+  // If auth finished loading but there's no user, redirect to login
+  useEffect(() => {
+    if (loading) return
+    if (!user) {
+      router.replace('/login')
+    }
+  }, [loading, user, router])
+
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
 
     const supabase = createClient()
 
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
+    const initAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
 
-      if (session?.user) {
+        if (error || !session) {
+          // Clear any stale cookies/state
+          await supabase.auth.signOut()
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          setLoading(false)
+          return
+        }
+
+        setSession(session)
+        setUser(session.user)
         await fetchProfile(session.user.id)
+      } catch (err) {
+        console.error('Auth initialization failed:', err)
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
-    getSession()
+    initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
