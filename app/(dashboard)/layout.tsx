@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { AuthProvider } from '@/lib/context/AuthContext'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   BarChart3,
   LayoutDashboard,
@@ -25,11 +27,46 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function LayoutSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar skeleton */}
+      <aside className="fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 hidden lg:block">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center h-16 px-4 border-b border-gray-200">
+            <Skeleton className="h-8 w-8 rounded" />
+            <Skeleton className="h-5 w-28 ml-2" />
+          </div>
+          <nav className="flex-1 px-3 py-4 space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full rounded-lg" />
+            ))}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Main content skeleton */}
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+          <div className="flex items-center h-16 px-4">
+            <Skeleton className="h-6 w-6 lg:hidden" />
+            <div className="flex-1" />
+          </div>
+        </header>
+        <main className="p-4 lg:p-6">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            ))}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, profile, signOut, loading } = useAuth()
@@ -38,6 +75,13 @@ export default function DashboardLayout({
 
   // Don't show layout for onboarding
   if (pathname === '/onboarding') {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      )
+    }
     return <>{children}</>
   }
 
@@ -47,11 +91,7 @@ export default function DashboardLayout({
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    )
+    return <LayoutSkeleton />
   }
 
   return (
@@ -177,5 +217,17 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+  )
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AuthProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </AuthProvider>
   )
 }

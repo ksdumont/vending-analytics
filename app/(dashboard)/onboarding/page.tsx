@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { BarChart3, Upload, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { createClient } from '@/lib/supabase/client'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -38,7 +39,6 @@ export default function OnboardingPage() {
 
           <button
             onClick={async () => {
-              const { createClient } = await import('@/lib/supabase/client')
               const supabase = createClient()
               const { data: { user } } = await supabase.auth.getUser()
               if (user) {

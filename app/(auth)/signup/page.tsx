@@ -40,7 +40,7 @@ export default function SignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
@@ -62,7 +62,7 @@ export default function SignupPage() {
         if (data.user.identities?.length === 0) {
           setSuccess(true)
         } else {
-          router.push('/onboarding')
+          router.replace('/onboarding')
           router.refresh()
         }
       }
