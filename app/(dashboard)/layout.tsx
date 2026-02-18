@@ -90,9 +90,27 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
 
-  // Show skeleton while auth is loading, or while redirecting to login
-  if (loading || !user) {
+  if (loading) {
     return <LayoutSkeleton />
+  }
+
+  // Session expired or not authenticated — use <a> for full page navigation
+  // so middleware can handle the redirect properly (avoids client-side loop)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Session expired</h2>
+          <p className="text-gray-600 mb-6">Your session has ended. Please sign in again.</p>
+          <a
+            href="/login"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
+          >
+            Sign in
+          </a>
+        </div>
+      </div>
+    )
   }
 
   return (

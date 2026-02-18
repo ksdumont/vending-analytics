@@ -56,14 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loading, profile, pathname, router])
 
-  // If auth finished loading but there's no user, redirect to login
-  useEffect(() => {
-    if (loading) return
-    if (!user) {
-      router.replace('/login')
-    }
-  }, [loading, user, router])
-
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
@@ -72,11 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const { data: { session } } = await supabase.auth.getSession()
 
-        if (error || !session) {
-          // Clear any stale cookies/state
-          await supabase.auth.signOut()
+        if (!session) {
           setSession(null)
           setUser(null)
           setProfile(null)
@@ -100,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
 
